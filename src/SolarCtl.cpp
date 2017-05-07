@@ -5,7 +5,7 @@
 #include <LiquidCrystal_I2C.h>
 
 void printAddress(DeviceAddress deviceAddress);
-void printTemperature(DeviceAddress deviceAddress);
+void printTemperature(DeviceAddress deviceAddress, uint8_t position);
 
 // set the LCD address to 0x27 for a 16 chars 2 line display
 // A FEW use address 0x3F
@@ -25,8 +25,14 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 /********************************************************************/ 
 
-// arrays to hold device address
-DeviceAddress insideThermometer;
+// Assign address manually. The addresses below will beed to be changed
+// to valid device addresses on your bus. Device address can be retrieved
+// by using either oneWire.search(deviceAddress) or individually via
+// sensors.getAddress(deviceAddress, index)
+// Note that you will need to use your specific address here
+DeviceAddress t1 = { 0x28, 0xFF, 0x4D, 0x86, 0xC1, 0x16, 0x04, 0x42 }; // gray, white, black;
+DeviceAddress t2 = { 0x28, 0xFF, 0x36, 0x3B, 0xB3, 0x16, 0x05, 0xAD }; // green, blue, red
+DeviceAddress t3 = { 0x28, 0xFF, 0x67, 0xD7, 0xB5, 0x16, 0x03, 0xA2 }; // brown,red,orange
 
 /*-----( Declare Variables )-----*/
 //NONE
@@ -38,6 +44,8 @@ void setup() {
   lcd.begin(16,2);   // initialize the lcd for 16 chars 2 lines, turn on backlight
   lcd.setCursor(0,0); // char, line
   lcd.print("SolarCtl");
+  lcd.setCursor(0, 1);
+  lcd.print("Locating...");
 
   // locate devices on the bus
   Serial.print("Locating devices...");
@@ -50,44 +58,11 @@ void setup() {
   Serial.print("Parasite power is: "); 
   if (sensors.isParasitePowerMode()) Serial.println("ON");
   else Serial.println("OFF");
-  
-  // Assign address manually. The addresses below will beed to be changed
-  // to valid device addresses on your bus. Device address can be retrieved
-  // by using either oneWire.search(deviceAddress) or individually via
-  // sensors.getAddress(deviceAddress, index)
-  // Note that you will need to use your specific address here
-  //insideThermometer = { 0x28, 0x1D, 0x39, 0x31, 0x2, 0x0, 0x0, 0xF0 };
 
-  // Method 1:
-  // Search for devices on the bus and assign based on an index. Ideally,
-  // you would do this to initially discover addresses on the bus and then 
-  // use those addresses and manually assign them (see above) once you know 
-  // the devices on your bus (and assuming they don't change).
-  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
-  
-  // method 2: search()
-  // search() looks for the next device. Returns 1 if a new address has been
-  // returned. A zero might mean that the bus is shorted, there are no devices, 
-  // or you have already retrieved all of them. It might be a good idea to 
-  // check the CRC to make sure you didn't get garbage. The order is 
-  // deterministic. You will always get the same devices in the same order
-  //
-  // Must be called before search()
-  //oneWire.reset_search();
-  // assigns the first address found to insideThermometer
-  //if (!oneWire.search(insideThermometer)) Serial.println("Unable to find address for insideThermometer");
-
-  // show the addresses we found on the bus
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  Serial.println();
-
-  // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
-  sensors.setResolution(insideThermometer, 9);
- 
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC); 
-  Serial.println();
+  // set the resolution to 12 bit
+  sensors.setResolution(t1, 12);
+  sensors.setResolution(t2, 12);
+  sensors.setResolution(t3, 12);
 }
 
 void loop() {
@@ -96,26 +71,29 @@ void loop() {
   Serial.print("Requesting temperatures...");
   sensors.requestTemperatures(); // Send the command to get temperatures
   Serial.println("DONE");
-  
+
   // It responds almost immediately. Let's print out the data
-  printTemperature(insideThermometer); // Use a simple function to print out the data
+  printTemperature(t1,  0);
+  printTemperature(t2,  5);
+  printTemperature(t3, 10);
 
   delay(1000);
 }
 
 // function to print a device address
 void printAddress(DeviceAddress deviceAddress) {
-  for (uint8_t i = 0; i < 8; i++)
-  {
+  for (uint8_t i = 0; i < 8; i++) {
     if (deviceAddress[i] < 16) Serial.print("0");
     Serial.print(deviceAddress[i], HEX);
   }
 }
 
-void printTemperature(DeviceAddress deviceAddress) {
+void printTemperature(DeviceAddress deviceAddress, uint8_t position) {
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print("Temp C: ");
   Serial.print(tempC);
-  lcd.setCursor(0,1); // char, line
+  lcd.setCursor(position, 1); // char, line
   lcd.print(tempC);
+  lcd.setCursor(position + 4, 1);
+  lcd.print(" ");
 }
