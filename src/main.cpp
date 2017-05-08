@@ -57,8 +57,12 @@ int m2 = LOW;
 int m3 = LOW;
 int m4 = LOW;
 int q1 = LOW;
+
 // Button states
 int s1 = LOW;
+
+// Indicator
+boolean loopIndicator = false;
 
 #ifndef UNIT_TEST
 void setup() {
@@ -94,9 +98,13 @@ void setup() {
   sensors.setResolution(t1Address, 12);
   sensors.setResolution(t2Address, 12);
   sensors.setResolution(t3Address, 12);
+
+  lcd.clear();
 }
 
 void loop() {
+  loopIndicator = !loopIndicator;
+
   Serial.print("Requesting temperatures...");
   sensors.requestTemperatures(); // Send the command to get temperatures
   Serial.println("DONE");
@@ -164,7 +172,6 @@ float getTemperature(DeviceAddress deviceAddress) {
 }
 
 void printAll() {
-  lcd.clear();
   printTemperature(t1,  0);
   printTemperature(t2,  5);
   printTemperature(t3, 10);
@@ -174,11 +181,19 @@ void printAll() {
   printState(m4, 3);
   printState(q1, 5);
   printState(s1, 7);
+  lcd.setCursor(15, 0);
+  if (loopIndicator) {
+    lcd.print("*");
+  } else {
+    lcd.print(" ");
+  }
 }
 
 void printTemperature(float tempC, uint8_t position) {
   Serial.print("Temp C: ");
   Serial.print(tempC);
+  lcd.setCursor(position, 1); // char, line
+  lcd.print("     ");
   lcd.setCursor(position, 1); // char, line
   lcd.print(tempC);
   lcd.setCursor(position + 4, 1);
