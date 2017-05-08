@@ -16,6 +16,10 @@ LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I
 /********************************************************************/
 // Data wire is plugged into pin2 on the Arduino 
 #define ONE_WIRE_BUS 2
+#define RELAY_CH1    3
+#define RELAY_CH2    4
+#define RELAY_CH3    5
+#define RELAY_CH4    6
 /********************************************************************/
 // Setup a oneWire instance to communicate with any OneWire devices  
 // (not just Maxim/Dallas temperature ICs) 
@@ -47,6 +51,11 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("Locating...");
 
+  pinMode(RELAY_CH1, OUTPUT);
+  pinMode(RELAY_CH2, OUTPUT);
+  pinMode(RELAY_CH3, OUTPUT);
+  pinMode(RELAY_CH4, OUTPUT);
+
   // locate devices on the bus
   Serial.print("Locating devices...");
   sensors.begin();
@@ -76,8 +85,27 @@ void loop() {
   printTemperature(t1,  0);
   printTemperature(t2,  5);
   printTemperature(t3, 10);
-
   delay(1000);
+
+  digitalWrite(RELAY_CH1, HIGH);
+  delay(500);
+  digitalWrite(RELAY_CH1, LOW);
+  delay(500);
+
+  digitalWrite(RELAY_CH2, HIGH);
+  delay(500);
+  digitalWrite(RELAY_CH2, LOW);
+  delay(500);
+
+  digitalWrite(RELAY_CH3, HIGH);
+  delay(500);
+  digitalWrite(RELAY_CH3, LOW);
+  delay(500);
+
+  digitalWrite(RELAY_CH4, HIGH);
+  delay(500);
+  digitalWrite(RELAY_CH4, LOW);
+  delay(500);
 }
 
 // function to print a device address
