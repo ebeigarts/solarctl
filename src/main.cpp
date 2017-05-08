@@ -67,11 +67,11 @@ boolean loopIndicator = false;
 #ifndef UNIT_TEST
 void setup() {
   Serial.begin(9600); // Used to type in characters
-  Serial.println("SolarCtl");
+  Serial.println("Liepa Solar Ctl");
 
   lcd.begin(16, 2);    // initialize the lcd for 16 chars 2 lines, turn on backlight
   lcd.setCursor(0, 0); // char, line
-  lcd.print("SolarCtl");
+  lcd.print("Liepa Solar Ctl");
   lcd.setCursor(0, 1);
   lcd.print("Locating...");
 
@@ -114,6 +114,11 @@ void loop() {
   s1 = digitalRead(S1);
 
   // Change states
+  if (s1) {
+    lcd.backlight();
+  } else {
+    lcd.noBacklight();
+  }
   // if (t1 > t2 && t1 > SOLAR_MIN_TEMPERATURE) {
   //   setSolarActive();
   //   turnOn(1,2,3,4);
@@ -176,15 +181,20 @@ void printAll() {
   printTemperature(t2,  5);
   printTemperature(t3, 10);
   printState(m1, 0);
-  printState(m2, 1);
-  printState(m3, 2);
-  printState(m4, 3);
-  printState(q1, 5);
-  printState(s1, 7);
-  lcd.setCursor(15, 0);
+  printState(m2, 2);
+  printState(m3, 4);
+  printState(m4, 6);
+  printState(q1, 8);
+  printState(s1, 13);
   if (loopIndicator) {
-    lcd.print("*");
+    lcd.setCursor(15, 0);
+    lcd.print((char)252);
+    lcd.setCursor(15, 1);
+    lcd.print("L");
   } else {
+    lcd.setCursor(15, 0);
+    lcd.print(" ");
+    lcd.setCursor(15, 1);
     lcd.print(" ");
   }
 }
