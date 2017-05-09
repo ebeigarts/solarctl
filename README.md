@@ -1,5 +1,7 @@
 # SolarCtl
 
+![](https://scontent-frt3-1.cdninstagram.com/t51.2885-15/e35/18380990_1389323891113759_1122005118829461504_n.jpg)
+
 Hardware:
 
 - 1x Arduino Duemilanove
