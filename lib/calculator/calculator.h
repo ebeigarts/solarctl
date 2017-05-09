@@ -1,13 +1,19 @@
 class Calculator {
   private:
     // Temperatures
-    float t1, t2, t3;
+    float t1; // kolektora temperatūra
+    float t2; // turpgaitas temperatūra
+    float t3; // atpakļgaitas temperatūra
 
     // Relay states
-    bool m1, m2, m3, m4, q1;
+    bool m1; // cirkulācijas sūknis
+    bool m2; // kolektoru vārsts
+    bool m3; // cirkulācijas vārsts
+    bool m4; // grīdas kontūra vārsts
+    bool q1; // boilera sildītājs (HeaterOn)
 
     // Button states
-    bool s1;
+    bool s1; // esam mājās (AtHome)
 
   public:
     Calculator() {
