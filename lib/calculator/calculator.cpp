@@ -41,11 +41,9 @@ void Calculator::calculate() {
     (s1 && t2 > FLOOR_COMFORT_MIN_TEMPERATURE)
   );
   q1 = (
-    (t2 < FLOOR_STANDBY_MIN_TEMPERATURE) ||
-    (s1 && (
-        (!solarActive) ||
-        (solarActive && (tDelta > HEATING_DELTA_MIN_TEMPERATURE))
-      )
+    s1 && (
+      (!solarActive) ||
+      (solarActive && (tDelta > HEATING_DELTA_MIN_TEMPERATURE))
     )
   );
 }
