@@ -1,7 +1,7 @@
 class Calculator {
   private:
     // Temperatures
-    float t1, t2, t3, tDelta;
+    float t1, t2, t3;
 
     // Relay states
     bool m1, m2, m3, m4, q1;
@@ -14,7 +14,6 @@ class Calculator {
       t1 = 0.0;
       t2 = 0.0;
       t3 = 0.0;
-      tDelta = 0.0;
       m1 = false;
       m2 = false;
       m3 = false;

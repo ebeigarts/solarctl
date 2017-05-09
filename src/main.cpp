@@ -86,10 +86,6 @@ void setup() {
 void loop() {
   loopIndicator = !loopIndicator;
 
-  Serial.print("Requesting temperatures...");
-  sensors.requestTemperatures(); // Send the command to get temperatures
-  Serial.println("DONE");
-
   // Read states
   getTemperatures();
   getS1();
@@ -113,6 +109,10 @@ void getS1() {
 }
 
 void getTemperatures() {
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  Serial.println("DONE");
+
   calc.setT1(sensors.getTempC(t1Address));
   calc.setT2(sensors.getTempC(t2Address));
   calc.setT3(sensors.getTempC(t3Address));
