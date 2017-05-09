@@ -1,23 +1,23 @@
+#ifndef UNIT_TEST
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 #include <LiquidCrystal_I2C.h>
+#include "calculator.h"
 
+void getS1();
 void getTemperatures();
-float getTemperature(DeviceAddress deviceAddress);
-void printTemperature(float tempC, uint8_t position);
-void setState(int *state, int pin, int value);
-void printState(int state, uint8_t position);
+
+void setStates();
+void setState(int pin, bool value);
+
 void printAll();
-
-/* Constants ******************************************************************/
-
-#define SOLAR_MIN_TEMPERATURE         25.0 // T1, pie kuras mēģināt palaist sistēmu
-#define SOLAR_DELTA_MIN_TEMPERATURE    3.0 // T3-T2, pie kura ir jādarbina sistēma
-#define FLOOR_COMFORT_MIN_TEMPERATURE 40.0 // T2, pie kuras pieslēgt grīdas apkuri komforta režīmā
-#define FLOOR_STANDBY_MIN_TEMPERATURE 30.0 // T2, pie kuras pieslēgt grīdas apkuri standby režīmā
-#define HEATING_DELTA_MIN_TEMPERATURE  7.0 // T3-T2, pie kura pārsniegšanas jāieslēdz boilera sildītājs
+void printLoopIndicator();
+void printTemperature(float tempC, uint8_t position);
+void printState(bool state, uint8_t position);
+void toggleBacklight();
 
 /* Digital Pins ***************************************************************/
 
@@ -45,26 +45,11 @@ DeviceAddress t1Address = { 0x28, 0xFF, 0x4D, 0x86, 0xC1, 0x16, 0x04, 0x42 }; //
 DeviceAddress t2Address = { 0x28, 0xFF, 0x36, 0x3B, 0xB3, 0x16, 0x05, 0xAD }; // T2 green, blue, red
 DeviceAddress t3Address = { 0x28, 0xFF, 0x67, 0xD7, 0xB5, 0x16, 0x03, 0xA2 }; // T3 brown, red, orange
 
-// Temperatures
-float t1 = 0.0;
-float t2 = 0.0;
-float t3 = 0.0;
-float tDelta = 0.0;
-
-// Relay states
-int m1 = LOW;
-int m2 = LOW;
-int m3 = LOW;
-int m4 = LOW;
-int q1 = LOW;
-
-// Button states
-int s1 = LOW;
+Calculator calc;
 
 // Indicator
-boolean loopIndicator = false;
+bool loopIndicator = false;
 
-#ifndef UNIT_TEST
 void setup() {
   Serial.begin(9600); // Used to type in characters
   Serial.println("Liepa Solar Ctl");
@@ -75,6 +60,7 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("Locating...");
 
+  setStates(); // set default relay states before changing pin mode
   pinMode(M1, OUTPUT);
   pinMode(M2, OUTPUT);
   pinMode(M3, OUTPUT);
@@ -88,11 +74,6 @@ void setup() {
   Serial.print("Found ");
   Serial.print(sensors.getDeviceCount(), DEC);
   Serial.println(" devices.");
-
-  // report parasite power requirements
-  Serial.print("Parasite power is: "); 
-  if (sensors.isParasitePowerMode()) Serial.println("ON");
-  else Serial.println("OFF");
 
   // Make sensor reading super precise
   sensors.setResolution(t1Address, 12);
@@ -111,81 +92,62 @@ void loop() {
 
   // Read states
   getTemperatures();
-  s1 = digitalRead(S1);
+  getS1();
 
-  // Change states
-  if (s1) {
-    lcd.backlight();
-  } else {
-    lcd.noBacklight();
-  }
-  // if (t1 > t2 && t1 > SOLAR_MIN_TEMPERATURE) {
-  //   setSolarActive();
-  //   turnOn(1,2,3,4);
-  //   turnOff(q1);
-  // } else if (tDelta > SOLAR_DELTA_MIN_TEMPERATURE) {
-  //   setSolarActive();
-  //   turnOn(1,2,3,4);
-  //   turnOff(q1);
-  // } else {
-  //   unsetSolarActive();
-  //   turnOff(1,2,3,4);
-  //   turnOff(q1);
-  // }
+  // Calculte new states
+  calc.calculate();
+
+  // Change relay states
+  setStates();
 
   // Print
+  toggleBacklight();
   printAll();
+
+  // Sleep before the next tick
   delay(1000);
-
-  setState(&m1, M1, HIGH);
-  delay(500);
-  setState(&m1, M1, LOW);
-  delay(500);
-
-  setState(&m2, M2, HIGH);
-  delay(500);
-  setState(&m2, M2, LOW);
-  delay(500);
-
-  setState(&m3, M3, HIGH);
-  delay(500);
-  setState(&m3, M3, LOW);
-  delay(500);
-
-  setState(&m4, M4, HIGH);
-  delay(500);
-  setState(&m4, M4, LOW);
-  delay(500);
-
-  setState(&q1, Q1, HIGH);
-  delay(500);
-  setState(&q1, Q1, LOW);
-  delay(500);
 }
-#endif
+
+void getS1() {
+  calc.setS1(digitalRead(S1) == LOW);
+}
 
 void getTemperatures() {
-  t1 = getTemperature(t1Address);
-  t2 = getTemperature(t2Address);
-  t3 = getTemperature(t3Address);
-  tDelta = t3 - t2;
+  calc.setT1(sensors.getTempC(t1Address));
+  calc.setT2(sensors.getTempC(t2Address));
+  calc.setT3(sensors.getTempC(t3Address));
 }
 
-float getTemperature(DeviceAddress deviceAddress) {
-  float tempC = sensors.getTempC(deviceAddress);
-  return tempC;
+void setStates() {
+  setState(M1, calc.getM1());
+  setState(M2, calc.getM2());
+  setState(M3, calc.getM3());
+  setState(M4, calc.getM4());
+  setState(Q1, calc.getQ1());
+}
+
+void setState(int pin, bool value) {
+  if (value) {
+    digitalWrite(pin, LOW);
+  } else {
+    digitalWrite(pin, HIGH);
+  }
 }
 
 void printAll() {
-  printTemperature(t1,  0);
-  printTemperature(t2,  5);
-  printTemperature(t3, 10);
-  printState(m1, 0);
-  printState(m2, 2);
-  printState(m3, 4);
-  printState(m4, 6);
-  printState(q1, 8);
-  printState(s1, 13);
+  printTemperature(calc.getT1(),  0);
+  printTemperature(calc.getT2(),  5);
+  printTemperature(calc.getT3(), 10);
+  printState(calc.getM1(), 0);
+  printState(calc.getM2(), 2);
+  printState(calc.getM3(), 4);
+  printState(calc.getM4(), 6);
+  printState(calc.getQ1(), 8);
+  printState(calc.getS1(), 13);
+  printLoopIndicator();
+}
+
+void printLoopIndicator() {
   if (loopIndicator) {
     lcd.setCursor(15, 0);
     lcd.print((char)252);
@@ -210,15 +172,19 @@ void printTemperature(float tempC, uint8_t position) {
   lcd.print(" ");
 }
 
-void setState(int *state, int pin, int value) {
-  digitalWrite(pin, value);
-  *state = value;
-  printAll();
+void printState(bool state, uint8_t position) {
+  Serial.print("State: ");
+  Serial.print(state ? "1" : "0");
+  lcd.setCursor(position, 0); // char, line
+  lcd.print(state ? "1" : "0");
 }
 
-void printState(int state, uint8_t position) {
-  Serial.print("State: ");
-  Serial.print(state);
-  lcd.setCursor(position, 0); // char, line
-  lcd.print(state);
+void toggleBacklight() {
+  if (calc.getS1()) {
+    lcd.backlight();
+  } else {
+    lcd.noBacklight();
+  }
 }
+
+#endif
