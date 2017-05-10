@@ -19,7 +19,7 @@ bool Calculator::getM2() { return m2; }
 bool Calculator::getM3() { return m3; }
 bool Calculator::getM4() { return m4; }
 bool Calculator::getQ1() { return q1; }
-bool Calculator::getS1() { return q1; }
+bool Calculator::getS1() { return s1; }
 
 #define SOLAR_MIN_TEMPERATURE         25.0 // T1, pie kuras mēģināt palaist sistēmu
 #define SOLAR_DELTA_MIN_TEMPERATURE    3.0 // T3-T2, pie kura ir jādarbina sistēma

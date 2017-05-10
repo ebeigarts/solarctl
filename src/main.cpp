@@ -105,7 +105,7 @@ void loop() {
 }
 
 void getS1() {
-  calc.setS1(digitalRead(S1) == LOW);
+  calc.setS1(digitalRead(S1) == HIGH);
 }
 
 void getTemperatures() {
