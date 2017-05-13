@@ -37,8 +37,10 @@ void Calculator::calculate() {
   m2 = solarEnable;
   m3 = solarEnable;
   m4 = (
-    (!s1 && t2 > FLOOR_STANDBY_MIN_TEMPERATURE) ||
-    (s1 && t2 > FLOOR_COMFORT_MIN_TEMPERATURE)
+    solarEnable && (
+      (!s1 && t2 > FLOOR_STANDBY_MIN_TEMPERATURE) ||
+      (s1 && t2 > FLOOR_COMFORT_MIN_TEMPERATURE)
+    )
   );
   q1 = (
     s1 && (
